@@ -1,0 +1,95 @@
+"""This is the final project of Stanford University's Code In Place 2021.
+In this project I have built a Credit Card Fraud detection system using 
+MACHINE LEARNING with PYTHON"""
+
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+#Loading the creditcard CSV file to the Pandas Data Frame
+credit_card_data = pd.read_csv('/content/creditcard.csv')
+
+#Print the first 5 rows of the data
+credit_card_data.head()
+
+#Print the last 5 rows of the data
+credit_card_data.tail()
+
+#Undersatnding the information about the credit card data set we have: no. of columns, rows,data types,counts etc
+credit_card_data.info()
+
+"""This is where I start pre-processing the data before"""
+#Checking the number of missing values in the data
+credit_card_data.isnull().sum()
+
+"""Checking the number of transactions that are legit
+and the number of transactions that are fraudulent. As per our data set
+the column class would provide us with the indicator: 0 means legit,
+1 means fraudulent"""
+credit_card_data['Class'].value_counts()
+
+"""The above data looks like it is highly un-balanced.So we cannot
+use this data to train our ML model because it will always be biased towards
+legit transactions. Therefore, we'll have to further process the data"""
+
+# creating two variables: legit & fraud for tracking both kind of transactions
+legit = credit_card_data[credit_card_data.Class == 0]
+fraud = credit_card_data[credit_card_data.Class == 1]
+print(legit.shape)
+print(fraud.shape)
+
+#Understanding Statistical analysis of the data
+legit.Amount.describe()
+
+fraud.Amount.describe()
+
+#Understanding the differences between the fraud and legit transactions
+credit_card_data.groupby('Class').mean()
+
+"""Under Sampling the data set
+Building a sample data set that has similar distributions of
+legit and fraudulent transactions & we have number of fraudulent 
+transactions to be 492"""
+
+#Taking out only 492 legit transactions from the data set and storing it in a sample variable
+legit_sample = legit.sample(n=492)
+print(legit_sample)
+
+"""Now that I have 492 legit transactions and 492 fraud transactions.
+Created a new data set that contains 492 each of fraud and legit transactions
+and this data set will be used to train our ML model"""
+#concatenating two data frames
+new_dataset = pd.concat([legit_sample, fraud], axis=0)
+new_dataset['Class'].value_counts()
+
+#Checking if the this data set is same as the original data set
+new_dataset.groupby('Class').mean()
+
+#splitting the data into two parts: targets & Features
+# X is our target variable which is the class column
+# Y is our feature variable which contains all the other columns
+X = new_dataset.drop(columns='Class', axis=1)
+Y = new_dataset['Class']
+print(X)
+print(Y)
+
+#Splitting the data set into Training and Test data
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, stratify=Y, random_state=2)
+print(X.shape, X_train.shape, X_test.shape)
+
+#Training our ML Model using LOGISTIC REGRESSION
+model = LogisticRegression()
+model.fit(X_train, Y_train)
+
+"""Evaluating our ML model with logistic regression"""
+# Determining the Accuracy score of our Training and Test Data
+# Training Data:
+X_train_prediction = model.predict(X_train)
+training_data_accuracy = accuracy_score(X_train_prediction, Y_train)
+print('Accuracy on Training data : ', training_data_accuracy)
+# Test Data:
+X_test_prediction = model.predict(X_test)
+test_data_accuracy = accuracy_score(X_test_prediction, Y_test)
+print('Accuracy score on Test Data : ', test_data_accuracy)
